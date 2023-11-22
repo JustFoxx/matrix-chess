@@ -1,5 +1,4 @@
 use owo_colors::{AnsiColors, OwoColorize};
-use std::fmt::{Display, Formatter, Write};
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 enum Player {
@@ -19,13 +18,14 @@ impl Player {
 #[derive(PartialEq, Eq, Clone, Copy)]
 enum Piece {
     Empty,
-    Pawn(Player),
+    Pawn(Player, bool),
     Knight(Player),
     Bishop(Player),
     Rook(Player),
     Queen(Player),
     King(Player),
 }
+
 
 impl Display for Piece {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -40,6 +40,22 @@ impl Display for Piece {
             King(player) => 'K'.color(player.get_color()),
         };
         piece.fmt(f)
+    }
+
+    fn get_color(&self) -> Color {
+        match self {
+            Piece::Empty => Color::Black,
+            Piece::Pawn(player,_) |
+            Piece::Knight(player) |
+            Piece::Bishop(player) |
+            Piece::Rook(player)   |
+            Piece::Queen(player)  |
+            Piece::King(player) => player.get_color(),
+        }
+    }
+
+    fn get_colored_str(&self) -> ColoredString {
+        self.get_str().color(self.get_color())
     }
 }
 
@@ -75,6 +91,7 @@ impl From<[u8; 2]> for Place {
         Place::new(x, y)
     }
 }
+
 
 impl Display for Board {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
