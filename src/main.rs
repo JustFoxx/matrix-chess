@@ -1,6 +1,6 @@
 use std::fmt::{Display, Error, format, Formatter, write};
 use std::io::{stdout, Write};
-use colored::{Color, Colorize};
+use colored::{Color, ColoredString, Colorize};
 
 #[derive(PartialEq, Eq, Clone)]
 enum Player {
@@ -52,15 +52,9 @@ impl Piece {
             Piece::King(player) => player.get_color(),
         }
     }
-}
 
-impl Display for Piece {
-
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Piece::Empty => write!(f, " "),
-            _ => write!(f, "{}", self.get_str().color(self.get_color())),
-        }
+    fn get_colored_str(&self) -> ColoredString {
+        self.get_str().color(self.get_color())
     }
 }
 
@@ -91,7 +85,7 @@ impl BoardTrait for Board {
         let mut lock = stdout().lock();
         for (i, row) in self.iter().enumerate() {
             for (j, cell) in row.iter().enumerate() {
-                let str_cell = cell.get_str().color(cell.get_color());
+                let str_cell = cell.get_colored_str();
                 let colored_cell = match (i + j) % 2 == 0 {
                     true => str_cell.on_white(),
                     false => str_cell.on_black(),
