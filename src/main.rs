@@ -91,7 +91,7 @@ impl BoardTrait for Board {
         let mut lock = stdout().lock();
         for (i, row) in self.iter().enumerate() {
             for (j, cell) in row.iter().enumerate() {
-                let str_cell = cell.get_str();
+                let str_cell = cell.get_str().color(cell.get_color());
                 let colored_cell = match (i + j) % 2 == 0 {
                     true => str_cell.on_white(),
                     false => str_cell.on_black(),
