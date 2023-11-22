@@ -20,20 +20,19 @@ impl Player {
 #[derive(PartialEq, Eq, Clone)]
 enum Piece {
     Empty,
-    Pawn(Player),
+    Pawn(Player, bool),
     Knight(Player),
     Bishop(Player),
     Rook(Player),
     Queen(Player),
     King(Player),
-    DoublePawn(Player),
 }
 
 impl Piece {
     fn get_str(&self) -> &str {
         match self {
             Piece::Empty => " ",
-            Piece::Pawn(_) | Piece::DoublePawn(_) => "P",
+            Piece::Pawn(_,_)  => "P",
             Piece::Knight(_) => "N",
             Piece::Bishop(_) => "B",
             Piece::Rook(_) => "R",
@@ -45,8 +44,7 @@ impl Piece {
     fn get_color(&self) -> Color {
         match self {
             Piece::Empty => Color::Black,
-            Piece::Pawn(player) |
-            Piece::DoublePawn(player) |
+            Piece::Pawn(player,_) |
             Piece::Knight(player) |
             Piece::Bishop(player) |
             Piece::Rook(player) |
@@ -107,7 +105,12 @@ impl BoardTrait for Board {
     }
 
     fn move_piece_and_print(&mut self, from: Place, to: Place) -> Result<(), &str> {
-        if to == from && to.x >= self.len() && to.y >= self.len() && from.x >= self.len() && from.y >= self.len() {
+        if to == from
+            || to.x >= self.len()
+            || to.y >= self.len()
+            || from.x >= self.len()
+            || from.y >= self.len()
+        {
             return Err("Invalid move")
         }
         let coords = (
@@ -132,12 +135,12 @@ impl BoardTrait for Board {
 
 const CHESS_BOARD: Board = [
     [Piece::Rook(Player::Blue), Piece::Knight(Player::Blue), Piece::Bishop(Player::Blue), Piece::Queen(Player::Blue), Piece::King(Player::Blue), Piece::Bishop(Player::Blue), Piece::Knight(Player::Blue), Piece::Rook(Player::Blue)],
-    [Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue)],
+    [Piece::Pawn(Player::Blue, false), Piece::Pawn(Player::Blue, false), Piece::Pawn(Player::Blue, false), Piece::Pawn(Player::Blue, false), Piece::Pawn(Player::Blue, false), Piece::Pawn(Player::Blue, false), Piece::Pawn(Player::Blue, false), Piece::Pawn(Player::Blue, false)],
     [Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty],
     [Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty],
     [Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty],
     [Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty],
-    [Piece::Pawn(Player::Red), Piece::Pawn(Player::Red), Piece::Pawn(Player::Red), Piece::Pawn(Player::Red), Piece::Pawn(Player::Red), Piece::Pawn(Player::Red), Piece::Pawn(Player::Red), Piece::Pawn(Player::Red)],
+    [Piece::Pawn(Player::Red, false), Piece::Pawn(Player::Red, false), Piece::Pawn(Player::Red, false), Piece::Pawn(Player::Red, false), Piece::Pawn(Player::Red, false), Piece::Pawn(Player::Red, false), Piece::Pawn(Player::Red, false), Piece::Pawn(Player::Red, false)],
     [Piece::Rook(Player::Red), Piece::Knight(Player::Red), Piece::Bishop(Player::Red), Piece::Queen(Player::Red), Piece::King(Player::Red), Piece::Bishop(Player::Red), Piece::Knight(Player::Red), Piece::Rook(Player::Red)],
 ];
 
