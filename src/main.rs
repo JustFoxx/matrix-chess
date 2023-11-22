@@ -1,4 +1,4 @@
-use std::fmt::{Display, Error, format, Formatter};
+use std::fmt::{Display, Error, format, Formatter, write};
 use std::io::{stdout, Write};
 use colored::{Color, Colorize};
 
@@ -29,16 +29,39 @@ enum Piece {
     DoublePawn(Player),
 }
 
+impl Piece {
+    fn get_str(&self) -> &str {
+        match self {
+            Piece::Empty => " ",
+            Piece::Pawn(_) | Piece::DoublePawn(_) => "P",
+            Piece::Knight(_) => "N",
+            Piece::Bishop(_) => "B",
+            Piece::Rook(_) => "R",
+            Piece::Queen(_) => "Q",
+            Piece::King(_) => "K",
+        }
+    }
+
+    fn get_color(&self) -> Color {
+        match self {
+            Piece::Empty => Color::Black,
+            Piece::Pawn(player) |
+            Piece::DoublePawn(player) |
+            Piece::Knight(player) |
+            Piece::Bishop(player) |
+            Piece::Rook(player) |
+            Piece::Queen(player) |
+            Piece::King(player) => player.get_color(),
+        }
+    }
+}
+
 impl Display for Piece {
+
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Piece::Empty => write!(f, " "),
-            Piece::Pawn(player) | Piece::DoublePawn(player) => write!(f, "{}","P".color(player.get_color())),
-            Piece::Knight(player) => write!(f, "{}", "N".color(player.get_color())),
-            Piece::Bishop(player) => write!(f, "{}", "B".color(player.get_color())),
-            Piece::Rook(player) => write!(f, "{}", "R".color(player.get_color())),
-            Piece::Queen(player) => write!(f, "{}", "Q".color(player.get_color())),
-            Piece::King(player) => write!(f, "{}", "K".color(player.get_color())),
+            _ => write!(f, "{}", self.get_str().color(self.get_color())),
         }
     }
 }
@@ -70,13 +93,14 @@ impl BoardTrait for Board {
         let mut lock = stdout().lock();
         for (i, row) in self.iter().enumerate() {
             for (j, cell) in row.iter().enumerate() {
+                let str_cell = cell.get_str();
                 let colored_cell = match (i + j) % 2 == 0 {
-                    true => cell.to_string().on_white(),
-                    false => cell.to_string().on_black(),
+                    true => str_cell.on_white(),
+                    false => str_cell.on_black(),
                 };
-                lock.write_all(colored_cell.to_string().as_bytes())?;
+                write!(lock, "{}", colored_cell)?;
             }
-            lock.write_all("\n".as_bytes())?;
+            writeln!(lock)?;
             lock.flush()?;
         }
         Ok(())
