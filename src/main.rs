@@ -47,8 +47,8 @@ impl Piece {
             Piece::Pawn(player,_) |
             Piece::Knight(player) |
             Piece::Bishop(player) |
-            Piece::Rook(player) |
-            Piece::Queen(player) |
+            Piece::Rook(player)   |
+            Piece::Queen(player)  |
             Piece::King(player) => player.get_color(),
         }
     }
