@@ -1,23 +1,22 @@
-use std::fmt::{Display, Error, format, Formatter};
-use std::io::{stdout, Write};
-use colored::{Color, Colorize};
+use owo_colors::{AnsiColors, OwoColorize};
+use std::fmt::{Display, Formatter, Write};
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 enum Player {
-    Blue = -1,
-    Red = 1 ,
+    Blue,
+    Red,
 }
 
 impl Player {
-    fn get_color(&self) -> Color {
+    fn get_color(&self) -> AnsiColors {
         match *self {
-            Player::Blue => Color::Blue,
-            Player::Red => Color::Red,
+            Player::Blue => AnsiColors::Blue,
+            Player::Red => AnsiColors::Red,
         }
     }
 }
 
-#[derive(PartialEq, Eq, Clone)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 enum Piece {
     Empty,
     Pawn(Player),
@@ -26,14 +25,15 @@ enum Piece {
     Rook(Player),
     Queen(Player),
     King(Player),
-    DoublePawn(Player),
 }
 
 impl Display for Piece {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Piece::Empty => write!(f, " "),
-            Piece::Pawn(player) | Piece::DoublePawn(player) => write!(f, "{}","P".color(player.get_color())),
+            Piece::Pawn(player) => {
+                write!(f, "{}", "P".color(player.get_color()))
+            }
             Piece::Knight(player) => write!(f, "{}", "N".color(player.get_color())),
             Piece::Bishop(player) => write!(f, "{}", "B".color(player.get_color())),
             Piece::Rook(player) => write!(f, "{}", "R".color(player.get_color())),
@@ -43,83 +43,116 @@ impl Display for Piece {
     }
 }
 
-type Board = [[Piece;8];8];
+struct Board {
+    board: [[Piece; 8]; 8],
+}
 
 #[derive(PartialEq, Eq)]
 struct Place {
-    x: usize,
-    y: usize,
+    x: u8,
+    y: u8,
 }
 
 impl Place {
-    fn new(x: usize, y: usize) -> Place {
-        Place {
-            x,
-            y
-        }
+    pub fn new(x: u8, y: u8) -> Place {
+        Place { x, y }
+    }
+    pub fn y(&self) -> usize {
+        self.y as usize
+    }
+    pub fn x(&self) -> usize {
+        self.x as usize
     }
 }
 
-trait BoardTrait {
-    fn print_board(&self) -> Result<(), std::io::Error>;
-    fn move_piece_and_print(&mut self, place: Place, moved: Place) -> Result<(), &str>;
+impl From<(u8, u8)> for Place {
+    fn from((x, y): (u8, u8)) -> Self {
+        Place::new(x, y)
+    }
+}
+impl From<[u8; 2]> for Place {
+    fn from([x, y]: [u8; 2]) -> Self {
+        Place::new(x, y)
+    }
 }
 
-impl BoardTrait for Board {
-    fn print_board(&self) -> Result<(), std::io::Error> {
-        let mut lock = stdout().lock();
-        for (i, row) in self.iter().enumerate() {
-            for (j, cell) in row.iter().enumerate() {
-                let colored_cell = match (i + j) % 2 == 0 {
-                    true => cell.to_string().on_white(),
-                    false => cell.to_string().on_black(),
-                };
-                lock.write_all(colored_cell.to_string().as_bytes())?;
+impl Display for Board {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for (i, row) in self.board.iter().enumerate() {
+            if i != 0 {
+                f.write_char('\n')?;
             }
-            lock.write_all("\n".as_bytes())?;
-            lock.flush()?;
+            for (j, piece) in row.iter().enumerate() {
+                let color = match (i + j) % 2 == 0 {
+                    true => AnsiColors::White,
+                    false => AnsiColors::Black,
+                };
+                piece.on_color(color).fmt(f)?;
+            }
         }
         Ok(())
     }
+}
 
-    fn move_piece_and_print(&mut self, from: Place, to: Place) -> Result<(), &str> {
-        if to == from && to.x >= self.len() && to.y >= self.len() && from.x >= self.len() && from.y >= self.len() {
-            return Err("Invalid move")
+impl Board {
+    fn move_piece(&mut self, from: impl Into<Place>, to: impl Into<Place>) -> Result<(), &str> {
+        const SIZE: usize = 8;
+        let (from, to) = (from.into(), to.into());
+        if to == from || to.x() >= SIZE || to.y() >= SIZE || from.x() >= SIZE || from.y() >= SIZE {
+            return Err("Invalid move");
         }
-        let coords = (
-            (self.len()-1-from.y, from.x),
-            (self.len()-1-to.y, to.x)
-        );
-        let piece = self[coords.0.0][coords.0.1].clone();
+        let [from, to] = [(SIZE - 1 - from.y(), from.x()), (SIZE - 1 - to.y(), to.x())];
+        let piece = self.board[from.0][from.1];
         match piece {
             Piece::Empty => return Err("No piece to move"),
             _ => {
-                self[coords.1.0][coords.1.1] = piece;
-                self[coords.0.0][coords.0.1] = Piece::Empty;
+                self.board[to.0][to.1] = piece;
+                self.board[from.0][from.1] = Piece::Empty;
             }
         }
-        match self.print_board() {
-            Ok(_) => Ok(()),
-            Err(_) => Err("Failed to print board"),
-        }
+        Ok(())
     }
-
 }
 
-const CHESS_BOARD: Board = [
-    [Piece::Rook(Player::Blue), Piece::Knight(Player::Blue), Piece::Bishop(Player::Blue), Piece::Queen(Player::Blue), Piece::King(Player::Blue), Piece::Bishop(Player::Blue), Piece::Knight(Player::Blue), Piece::Rook(Player::Blue)],
-    [Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue), Piece::Pawn(Player::Blue)],
-    [Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty],
-    [Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty],
-    [Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty],
-    [Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty, Piece::Empty],
-    [Piece::Pawn(Player::Red), Piece::Pawn(Player::Red), Piece::Pawn(Player::Red), Piece::Pawn(Player::Red), Piece::Pawn(Player::Red), Piece::Pawn(Player::Red), Piece::Pawn(Player::Red), Piece::Pawn(Player::Red)],
-    [Piece::Rook(Player::Red), Piece::Knight(Player::Red), Piece::Bishop(Player::Red), Piece::Queen(Player::Red), Piece::King(Player::Red), Piece::Bishop(Player::Red), Piece::Knight(Player::Red), Piece::Rook(Player::Red)],
-];
+const CHESS_BOARD: Board = {
+    use Piece::*;
+    use Player::*;
+    let board = [
+        [
+            Rook(Blue),
+            Knight(Blue),
+            Bishop(Blue),
+            Queen(Blue),
+            King(Blue),
+            Bishop(Blue),
+            Knight(Blue),
+            Rook(Blue),
+        ],
+        [Pawn(Blue); 8],
+        [Empty; 8],
+        [Empty; 8],
+        [Empty; 8],
+        [Empty; 8],
+        [Pawn(Red); 8],
+        [
+            Rook(Red),
+            Knight(Red),
+            Bishop(Red),
+            Queen(Red),
+            King(Red),
+            Bishop(Red),
+            Knight(Red),
+            Rook(Red),
+        ],
+    ];
+    Board { board }
+};
 
 fn main() {
     let mut chess_board = CHESS_BOARD;
-    chess_board.print_board().unwrap();
-    chess_board.move_piece_and_print(Place::new(0,0), Place::new(0,2)).unwrap();
-    chess_board.move_piece_and_print(Place::new(0,2), Place::new(1,4)).unwrap();
+    println!("{chess_board}");
+    chess_board.move_piece((0, 0), (0, 2)).unwrap();
+    println!("{chess_board}");
+    chess_board.move_piece((0, 2), (1, 4)).unwrap();
+    println!("{chess_board}");
 }
