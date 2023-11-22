@@ -29,17 +29,17 @@ enum Piece {
 
 impl Display for Piece {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Piece::Empty => write!(f, " "),
-            Piece::Pawn(player) => {
-                write!(f, "{}", "P".color(player.get_color()))
-            }
-            Piece::Knight(player) => write!(f, "{}", "N".color(player.get_color())),
-            Piece::Bishop(player) => write!(f, "{}", "B".color(player.get_color())),
-            Piece::Rook(player) => write!(f, "{}", "R".color(player.get_color())),
-            Piece::Queen(player) => write!(f, "{}", "Q".color(player.get_color())),
-            Piece::King(player) => write!(f, "{}", "K".color(player.get_color())),
-        }
+        use Piece::*;
+        let piece = match self {
+            Empty => ' '.color(AnsiColors::Black),
+            Pawn(player) => 'P'.color(player.get_color()),
+            Knight(player) => 'N'.color(player.get_color()),
+            Bishop(player) => 'B'.color(player.get_color()),
+            Rook(player) => 'R'.color(player.get_color()),
+            Queen(player) => 'Q'.color(player.get_color()),
+            King(player) => 'K'.color(player.get_color()),
+        };
+        piece.fmt(f)
     }
 }
 
