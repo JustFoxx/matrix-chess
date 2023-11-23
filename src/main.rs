@@ -1,4 +1,5 @@
-use owo_colors::{AnsiColors, OwoColorize};
+use std::fmt::{Display, Formatter, Write};
+use owo_colors::{AnsiColors, FgDynColorDisplay, OwoColorize};
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 enum Player {
@@ -26,25 +27,10 @@ enum Piece {
     King(Player),
 }
 
-
-impl Display for Piece {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        use Piece::*;
-        let piece = match self {
-            Empty => ' '.color(AnsiColors::Black),
-            Pawn(player) => 'P'.color(player.get_color()),
-            Knight(player) => 'N'.color(player.get_color()),
-            Bishop(player) => 'B'.color(player.get_color()),
-            Rook(player) => 'R'.color(player.get_color()),
-            Queen(player) => 'Q'.color(player.get_color()),
-            King(player) => 'K'.color(player.get_color()),
-        };
-        piece.fmt(f)
-    }
-
-    fn get_color(&self) -> Color {
+impl Piece {
+    fn get_color(&self) -> AnsiColors {
         match self {
-            Piece::Empty => Color::Black,
+            Piece::Empty => AnsiColors::Black,
             Piece::Pawn(player,_) |
             Piece::Knight(player) |
             Piece::Bishop(player) |
@@ -54,8 +40,27 @@ impl Display for Piece {
         }
     }
 
-    fn get_colored_str(&self) -> ColoredString {
+    fn get_colored_str(&self) -> FgDynColorDisplay<'_, AnsiColors, char> {
         self.get_str().color(self.get_color())
+    }
+
+    fn get_str(&self) -> &char {
+        match self {
+            Piece::Empty => &' ',
+            Piece::Pawn(_,_) => &'P',
+            Piece::Knight(_) => &'N',
+            Piece::Bishop(_) => &'B',
+            Piece::Rook(_) => &'R',
+            Piece::Queen(_) => &'Q',
+            Piece::King(_) => &'K',
+        }
+    }
+}
+
+impl Display for Piece {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let piece = self.get_colored_str();
+        piece.fmt(f)
     }
 }
 
@@ -145,12 +150,12 @@ const CHESS_BOARD: Board = {
             Knight(Blue),
             Rook(Blue),
         ],
-        [Pawn(Blue); 8],
+        [Pawn(Blue,false); 8],
         [Empty; 8],
         [Empty; 8],
         [Empty; 8],
         [Empty; 8],
-        [Pawn(Red); 8],
+        [Pawn(Red,false); 8],
         [
             Rook(Red),
             Knight(Red),
@@ -167,9 +172,9 @@ const CHESS_BOARD: Board = {
 
 fn main() {
     let mut chess_board = CHESS_BOARD;
-    println!("{chess_board}");
+    println!("{chess_board}\n");
     chess_board.move_piece((0, 0), (0, 2)).unwrap();
-    println!("{chess_board}");
+    println!("{chess_board}\n");
     chess_board.move_piece((0, 2), (1, 4)).unwrap();
-    println!("{chess_board}");
+    println!("{chess_board}\n");
 }
