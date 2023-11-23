@@ -3,15 +3,15 @@ use owo_colors::{AnsiColors, FgDynColorDisplay, OwoColorize};
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 enum Player {
-    Blue,
-    Red,
+    A,
+    B,
 }
 
 impl Player {
     fn get_color(&self) -> AnsiColors {
         match *self {
-            Player::Blue => AnsiColors::Blue,
-            Player::Red => AnsiColors::Red,
+            Player::A => AnsiColors::Blue,
+            Player::B => AnsiColors::Red,
         }
     }
 }
@@ -141,30 +141,30 @@ const CHESS_BOARD: Board = {
     use Player::*;
     let board = [
         [
-            Rook(Blue),
-            Knight(Blue),
-            Bishop(Blue),
-            Queen(Blue),
-            King(Blue),
-            Bishop(Blue),
-            Knight(Blue),
-            Rook(Blue),
+            Rook(A),
+            Knight(A),
+            Bishop(A),
+            Queen(A),
+            King(A),
+            Bishop(A),
+            Knight(A),
+            Rook(A),
         ],
-        [Pawn(Blue,false); 8],
+        [Pawn(A, false); 8],
         [Empty; 8],
         [Empty; 8],
         [Empty; 8],
         [Empty; 8],
-        [Pawn(Red,false); 8],
+        [Pawn(B, false); 8],
         [
-            Rook(Red),
-            Knight(Red),
-            Bishop(Red),
-            Queen(Red),
-            King(Red),
-            Bishop(Red),
-            Knight(Red),
-            Rook(Red),
+            Rook(B),
+            Knight(B),
+            Bishop(B),
+            Queen(B),
+            King(B),
+            Bishop(B),
+            Knight(B),
+            Rook(B),
         ],
     ];
     Board { board }
